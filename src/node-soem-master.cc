@@ -253,6 +253,44 @@ class NodeSoemMaster : public Nan::ObjectWrap {
 
                 slave->Set(String::NewFromUtf8(isolate, "pdelay"), Uint32::New(isolate, ec_slave[i].pdelay));
 
+                // slave->Set(String::NewFromUtf8(isolate, "party"), String::NewFromUtf8(isolate, ec_slave[i].ec_sii[0].ec_sii_variable[0].name));
+                
+                Local<Array> arr_ec_sii = Array::New(isolate);
+                // Local<Object> ec_sii = Object::New(isolate);
+
+                int ec_sii_counter = 0;
+                while(ec_slave[i].ec_sii[ec_sii_counter].Address != 0) {
+
+                    Local<Object> ec_sii = Object::New(isolate);
+                    ec_sii->Set(String::NewFromUtf8(isolate, "name"), String::NewFromUtf8(isolate, ec_slave[i].ec_sii[ec_sii_counter].Name));
+                    ec_sii->Set(String::NewFromUtf8(isolate, "SM"), Uint32::New(isolate, ec_slave[i].ec_sii[ec_sii_counter].SM));
+                    ec_sii->Set(String::NewFromUtf8(isolate, "address"), Uint32::New(isolate, ec_slave[i].ec_sii[ec_sii_counter].Address));
+
+                    Local<Array> arr_ec_sii_variable = Array::New(isolate);
+                    int ec_sii_variable_counter = 0;
+                    while(ec_slave[i].ec_sii[ec_sii_counter].ec_sii_variable[ec_sii_variable_counter].obj_idx != 0) {
+
+                        Local<Object> ec_sii_variable = Object::New(isolate);
+                        ec_sii_variable->Set(String::NewFromUtf8(isolate, "name"), String::NewFromUtf8(isolate, ec_slave[i].ec_sii[ec_sii_counter].ec_sii_variable[ec_sii_variable_counter].name));
+                        ec_sii_variable->Set(String::NewFromUtf8(isolate, "absOffset"), Uint32::New(isolate, ec_slave[i].ec_sii[ec_sii_counter].ec_sii_variable[ec_sii_variable_counter].abs_offset));
+                        ec_sii_variable->Set(String::NewFromUtf8(isolate, "absBit"), Uint32::New(isolate, ec_slave[i].ec_sii[ec_sii_counter].ec_sii_variable[ec_sii_variable_counter].abs_bit));
+                        ec_sii_variable->Set(String::NewFromUtf8(isolate, "objIndex"), Uint32::New(isolate, ec_slave[i].ec_sii[ec_sii_counter].ec_sii_variable[ec_sii_variable_counter].obj_idx));
+                        ec_sii_variable->Set(String::NewFromUtf8(isolate, "objSubIndex"), Uint32::New(isolate, ec_slave[i].ec_sii[ec_sii_counter].ec_sii_variable[ec_sii_variable_counter].obj_subidx));
+                        ec_sii_variable->Set(String::NewFromUtf8(isolate, "bitlen"), Uint32::New(isolate, ec_slave[i].ec_sii[ec_sii_counter].ec_sii_variable[ec_sii_variable_counter].bitlen));
+                        ec_sii_variable->Set(String::NewFromUtf8(isolate, "dataType"), String::NewFromUtf8(isolate, ec_slave[i].ec_sii[ec_sii_counter].ec_sii_variable[ec_sii_variable_counter].dataType));
+
+                        arr_ec_sii_variable->Set(ec_sii_variable_counter, ec_sii_variable);
+                        ec_sii_variable_counter++;
+                    }
+                    
+                    ec_sii->Set(String::NewFromUtf8(isolate, "variables"), arr_ec_sii_variable);
+
+                    arr_ec_sii->Set(ec_sii_counter, ec_sii);
+                    ec_sii_counter++;
+                } 
+
+                slave->Set(String::NewFromUtf8(isolate, "ec_sii"), arr_ec_sii);
+
                 arr->Set(i-1, slave);
 
                 i++;
