@@ -9,9 +9,34 @@ console.log(master.configInit(), 'working counter on config_init call.');
 console.log(master.configMap(), 'config map completed.');
 console.log(master.configDC(), 'configuring dc.');
 
+slaves = master.getSlaves();
 
-slaves = master.getSlaves()
+// intial send
+master.sendProcessdata();
+master.receiveProcessdata();
 
-console.log(slaves);
+console.log('Going to Operational State.');
 
-console.log(slaves[0].ec_sii[0])
+master.writeState(0, 8);
+
+console.log("State: ", master.statecheck(0, 4, 50))
+
+// intial send
+master.sendProcessdata();
+master.receiveProcessdata();
+
+
+console.log(master.writeData(0x1600, 8, [32]));
+console.log(master.readData(0x87645321, 8));
+
+// setInterval(() => {
+//     console.log(master.readData(6656, 32));
+// },1000)
+
+
+
+// slaves = master.getSlaves()
+
+// // console.log(slaves);
+
+// console.log(slaves[0].ec_sii[1])

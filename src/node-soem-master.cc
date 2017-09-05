@@ -37,6 +37,9 @@ class NodeSoemMaster : public Nan::ObjectWrap {
 
             SetPrototypeMethod(tpl, "getExpectedWC", getExpectedWC);
 
+            SetPrototypeMethod(tpl, "writeData", writeData);
+            SetPrototypeMethod(tpl, "readData", readData);
+
             constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
 
             Nan::Set(target, Nan::New("NodeSoemMaster").ToLocalChecked(),
@@ -333,6 +336,95 @@ class NodeSoemMaster : public Nan::ObjectWrap {
             info.GetReturnValue().Set(Uint32::New(isolate, exp));
 
         }
+
+        static NAN_METHOD(writeData) {
+            
+            Isolate* isolate = info.GetIsolate();
+
+
+            if (info[0]->IsUndefined()) {
+                isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "No Address Defined")));
+                return;
+            }
+
+            if (info[1]->IsUndefined()) {
+                isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "No Bitlength Defined")));
+                return;
+            }
+
+            if (info[2]->IsUndefined()) {
+                isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "No Data Defined")));
+                return;
+            }
+
+            Local<Array> data = Local<Array>::Cast(info[2]);
+            int address = info[0]->Uint32Value();
+            int bitLength = info[1]->Uint32Value();
+            int dataOut[1024];
+            
+            
+            for(unsigned int i = 0; i < data->Length(); i++) {
+                int val = data->Get(i)->Uint32Value();
+                printf("BufferData %d\n",  val);
+                dataOut[i] = val;
+            }
+ 
+
+            // int dataIn[1024];
+
+            int success = ecx_BWR(&ecx_port,0, address, bitLength, dataOut, 1024);
+
+            // success = ecx_BRD(&ecx_port,0, 5632, 8, dataIn, 1024);
+            
+            // // printf("Dataout: %d\n", dataOut->Get(0));
+            // printf("Datain: %d\n", dataIn[0]);
+            // printf("Datain: %d\n", dataIn[1]);
+
+            info.GetReturnValue().Set(Uint32::New(isolate, success));
+
+        }
+
+        static NAN_METHOD(readData) {
+            
+            Isolate* isolate = info.GetIsolate();
+
+            if (info[0]->IsUndefined()) {
+                isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "No Address Defined")));
+                return;
+            }
+
+            if (info[1]->IsUndefined()) {
+                isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "No Bitlength Defined")));
+                return;
+            }
+
+            int address = info[0]->Uint32Value();
+            int bitLength = info[1]->Uint32Value();
+
+            int dataIn[1024];
+
+            // int dataOut[1024];
+
+            // dataOut[0] = 4;
+
+            // int success = ecx_BWR(&ecx_port,0, 5632, 8, dataOut, 1024);
+
+            int success = ecx_BRD(&ecx_port,0, address, bitLength, dataIn, 1024);
+
+            Local<Array> data = Array::New(isolate);
+
+            for(int i = 0; i < bitLength / 8; i++) {
+                data->Set(i, Uint32::New(isolate, dataIn[i]));
+            }
+            
+
+            // data->Set(0, Uint32::New(isolate, 8));
+            // printf("Data: %d\n", dataIn[0]);
+
+            info.GetReturnValue().Set(data);
+
+        }
+
 
         static inline Nan::Persistent<Function> & constructor() {
             static Nan::Persistent<v8::Function> my_constructor;
