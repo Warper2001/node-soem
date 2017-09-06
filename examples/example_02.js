@@ -1,6 +1,6 @@
 var soem = require('../build/Release/node-soem');
-    master = soem.NodeSoemMaster("enp0s8");
-        
+master = soem.NodeSoemMaster("enp0s8");
+    
 console.log('Initiating.', master.getInterfaceName());
 
 console.log(master.init(), 'on interface', master.getInterfaceName());
@@ -20,69 +20,85 @@ master.receiveProcessdata();
 
 console.log('Going to Operational State.');
 
-master.writeState(0, 4);
+master.writeState(0, 8);
 
 var setupLoop = function () {
 
-    var setupInt = setInterval(function () {
+var setupInt = setInterval(function () {
 
-        master.sendProcessdata();
-        master.receiveProcessdata();
-        var state = master.statecheck(0, 4, 50);
+    master.sendProcessdata();
+    master.receiveProcessdata();
+    var state = master.statecheck(1, 8, 50);
 
-        console.log('Found state', state);
+    if (state === 8) {
+        clearInterval(setupInt);
+        startLoop();
+    }
 
-        if (state === 4) {
-            clearInterval(setupInt);
-            startLoop();
-        }
-
-    }, 50);
+}, 50);
 };
 
 var startLoop = function () {
 
-    var slaves = master.getSlaves(),
-        counter = 0;
-        console.log(`Counter: ${counter}`)
+var slaves = master.getSlaves(),
+    counter = 0;
 
-    var int = setInterval(function () {
+var int = setInterval(function () {
 
-        master.sendProcessdata();
-        var expectedWkc = master.getExpectedWC(), 
-            wkc = master.receiveProcessdata();
+    master.sendProcessdata();
+    var expectedWkc = master.getExpectedWC(), 
+        wkc = master.receiveProcessdata();
 
-        var dvo = new DataView(slaves[0].outputs),
-            dvi = new DataView(slaves[0].inputs);
+    var dvo = new DataView(slaves[0].outputs),
+        dvi = new DataView(slaves[0].inputs, 0, slaves[0].Ibytes);
 
-            // console.log(dvo, dvi)
+    var str = '';
 
-        var str = '';
-        for (var i = 0; i < slaves[0].inputs.byteLength; i += 1) {
-        
-            str += dvi.getUint8(i).toString(16) + ' ';
-        
-        }
+    address = slaves[0].ec_sii[0].variables[0].absOffset
+    dataType = slaves[0].ec_sii[0].variables[0].dataType
 
-        console.log(str);
+    const readData = (variable) => {
+        const { dataType, absOffset } = variable 
+     
+        switch(dataType) {
+         case 'UNSIGNED32':
+           return dvi.getUint32(absOffset, true)
+         default:
+             str = "NONE"
+         }
+     }
 
-        // if (expectedWkc !== wkc) {
-        
-        //     // console.log('Working counter error.');
+     const writeData = (variable, value) => {
+        const { dataType, absOffset } = variable 
+     
+        switch(dataType) {
+         case 'UNSIGNED8':
+           dvo.setUint8(absOffset, value)
+         default:
+             str = "NONE"
+         }
+     }
 
-        //     clearInterval(startLoop);
+     writeData(slaves[0].ec_sii[1].variables[0], 7)
 
-        //     setupLoop();
-        //     return;
+    console.log(readData(slaves[0].ec_sii[0].variables[0]))
 
-        // }
-        // offset = master.getSlaves()[0].ec_sii[1].variables[0].absOffset
-        // console.log(offset)
+    
+    if (expectedWkc !== wkc) {
+    
+        console.log('Working counter error.');
 
-        // dvo.setUint8(offset, counter++);
+        clearInterval(startLoop);
 
-    }, 50);
+        setupLoop();
+        return;
+
+    }
+
+}, 50);
 
 };
 
-setupLoop();
+setTimeout(() => {
+    setupLoop();
+},1000)
