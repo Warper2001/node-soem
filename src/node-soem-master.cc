@@ -39,6 +39,7 @@ class NodeSoemMaster : public Nan::ObjectWrap {
 
             SetPrototypeMethod(tpl, "writeData", writeData);
             SetPrototypeMethod(tpl, "readData", readData);
+            SetPrototypeMethod(tpl, "getAdapters", getAdapters);
 
             constructor().Reset(Nan::GetFunction(tpl).ToLocalChecked());
 
@@ -425,6 +426,28 @@ class NodeSoemMaster : public Nan::ObjectWrap {
 
         }
 
+        static NAN_METHOD(getAdapters) {
+            ec_adaptert * adapter = NULL;
+            Isolate* isolate = info.GetIsolate();
+            int counter = 0;
+            Local<Array> data = Array::New(isolate);
+
+            adapter = ec_find_adapters ();
+
+            while (adapter != NULL)
+            {
+                // printf ("Description : %s, Device to use for wpcap: %s\n", adapter->desc,adapter->name);
+                data->Set(counter, String::NewFromUtf8(isolate, adapter->name));
+                adapter = adapter->next;
+                counter++;
+            }
+            info.GetReturnValue().Set(data);
+        }
+
+        
+        
+            
+
 
         static inline Nan::Persistent<Function> & constructor() {
             static Nan::Persistent<v8::Function> my_constructor;
@@ -433,7 +456,6 @@ class NodeSoemMaster : public Nan::ObjectWrap {
 
         char *ifname_;
         char ioMap_[4096];
-
 };
 
 NODE_MODULE(objectwrapper, NodeSoemMaster::Init)

@@ -59,6 +59,7 @@ var int = setInterval(function () {
 
     const readData = (variable) => {
         const { dataType, absOffset } = variable 
+        console.log(dvi)
      
         switch(dataType) {
          case 'UNSIGNED32':
@@ -79,7 +80,7 @@ var int = setInterval(function () {
          }
      }
 
-     writeData(slaves[0].ec_sii[1].variables[0], 7)
+    //  writeData(slaves[0].ec_sii[1].variables[0], 7)
 
     console.log(readData(slaves[0].ec_sii[0].variables[0]))
 
@@ -95,7 +96,7 @@ var int = setInterval(function () {
 
     }
 
-}, 50);
+}, 5000);
 
 };
 
